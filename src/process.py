@@ -7,7 +7,12 @@ import scipy.sparse.linalg
 INITIAL_RATING = 1500.
 RATING_SD = 250.
 
-data = list(dataio.iter_tennis_data_xls_data('men'))
+if 'data' not in globals():
+    data = list(dataio.iter_tennis_data_xls_data('men'))
+# data = [
+#     [None, None, '1', '2', 1.5, 6],
+#     [None, None, '1', '2', 3, 6],
+# ]
 
 print len(data)
 
@@ -19,13 +24,12 @@ match_to_pw = {}
 
 pid = 0
 for di, d in enumerate(data):
-    p1, p2 = d[1], d[2]
+    p1, p2 = d[2], d[3]
     for name in [p1, p2]:
         if name not in pname_to_pid:
             pname_to_pid[name] = pid
             pid_to_pname[pid] = name
             pid += 1
-        p_to_matches[pname_to_pid[name]].append(di)
     match_to_pids[di] = [pname_to_pid[p1], pname_to_pid[p2]]
     match_to_pw[di] = 1./d[4]
 
@@ -56,3 +60,8 @@ for mi, pw in match_to_pw.iteritems():
     D[mi] = scipy.log(pw / (1-pw)) * RATING_SD
 
 R = scipy.sparse.linalg.lsqr(M, D)[0]
+
+order = scipy.argsort(R)
+
+for pid in order[-45:]:
+    print pid_to_pname[pid], R[pid]

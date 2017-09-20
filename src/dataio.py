@@ -44,9 +44,9 @@ def iter_tennis_data_xls_data(gender):
             date_val = val('Date')
             date_val = xlrd.xldate.xldate_as_datetime(date_val, 0).date()
             row.append(date_val)
-            row.append(val('Surface'))
-            row.append(val('Winner'))
-            row.append(val('Loser'))
+            row.append(val('Surface').strip())
+            row.append(val('Winner').strip())
+            row.append(val('Loser').strip())
             sw = sl = 0
             for oi in odds_indices:
                 oddsw = sheet.cell_value(rowi, oi)
