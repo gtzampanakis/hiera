@@ -7,17 +7,25 @@ import scipy.sparse.linalg
 INITIAL_RATING = 1500.
 RATING_SD = 250.
 
+SURFACES = [
+    'Hard',
+    'Clay',
+    'Grass',
+    'Carpet',
+]
+
+def get_sind(sstr):
+    return SURFACES.index(sstr)
+
 if 'data' not in globals():
     data = list(dataio.iter_tennis_data_xls_data('men'))
 # data = [
 #     [None, None, '1', '2', 1.5, 6],
 #     [None, None, '1', '2', 3, 6],
 # ]
-    for d in data:
-        d[2] = d[2]+d[1]
-        d[3] = d[3]+d[1]
-
-print len(data)
+    # for d in data:
+    #     d[2] = d[2]+d[1]
+    #     d[3] = d[3]+d[1]
 
 class Evaluator:
 
@@ -50,22 +58,33 @@ class Evaluator:
 #       R is ratings (p x 1)
 #       D is ratings differences (m x 1)
 
-        csr_data = scipy.zeros(m*2)
-        csr_row_ind = scipy.zeros(m*2)
-        csr_col_ind = scipy.zeros(m*2)
+        csr_data = scipy.zeros(m*2*4)
+        csr_row_ind = scipy.zeros(m*2*4)
+        csr_col_ind = scipy.zeros(m*2*4)
         for mi, pids in match_to_pids.iteritems():
-            mplier = 1
+            rm = 1
             if float(data[mi][6]) > 3:
-                mplier = 1.3
-            csr_data[mi] = +1 * mplier
-            csr_row_ind[mi] = mi
-            csr_col_ind[mi] = pids[0]
+                rm = 1.3
+            
+            sind = get_sind(data[mi][1])
 
-            csr_data[mi+m] = -1 * mplier
-            csr_row_ind[mi+m] = mi
-            csr_col_ind[mi+m] = pids[1]
+            for sindc in xrange(len(SURFACES)):
+                sm = None
+                if sindc == sind:
+                    sm = 1.
+                else:
+                    sm = .5
 
-        M = scipy.sparse.csr_matrix((csr_data, (csr_row_ind, csr_col_ind)))
+                csr_data[mi + sindc*m] = +1 * rm * sm
+                csr_row_ind[mi + sindc*m] = mi
+                csr_col_ind[mi + sindc*m] = pids[0] + sindc*p
+
+                csr_data[mi + sindc*m + 4*m] = -1 * rm * sm
+                csr_row_ind[mi + sindc*m + 4*m] = mi
+                csr_col_ind[mi + sindc*m + 4*m] = pids[1] + sindc*p
+
+        M = scipy.sparse.csr_matrix(
+            (csr_data, (csr_row_ind, csr_col_ind)), shape=(m,p*4))
         D = scipy.zeros((m,))
 
         for mi, pw in match_to_pw.iteritems():
@@ -77,7 +96,7 @@ class Evaluator:
 
     def solve(self, M, D):
         R = scipy.sparse.linalg.lsqr(M, D)[0]
-        order = scipy.argsort(R)
+        # order = scipy.argsort(R)
         # for pid in order[-45:]:
         #     print self.pid_to_pname[pid], R[pid]
         return R
