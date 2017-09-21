@@ -12,6 +12,7 @@ HEADER = [
     'loser',
     'oddsw',
     'oddsl',
+    'raceto',
 ]
 
 def iter_tennis_data_xls_data(gender):
@@ -67,5 +68,6 @@ def iter_tennis_data_xls_data(gender):
                 oddsw, oddsl = hieramath.normalize_odds(oddsw, oddsl)
                 row.append(oddsw)
                 row.append(oddsl)
+                row.append(val('Best of'))
                 yield row
 

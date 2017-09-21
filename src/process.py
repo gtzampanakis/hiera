@@ -13,6 +13,9 @@ if 'data' not in globals():
 #     [None, None, '1', '2', 1.5, 6],
 #     [None, None, '1', '2', 3, 6],
 # ]
+    for d in data:
+        d[2] = d[2]+d[1]
+        d[3] = d[3]+d[1]
 
 print len(data)
 
@@ -51,11 +54,14 @@ class Evaluator:
         csr_row_ind = scipy.zeros(m*2)
         csr_col_ind = scipy.zeros(m*2)
         for mi, pids in match_to_pids.iteritems():
-            csr_data[mi] = +1
+            mplier = 1
+            if float(data[mi][6]) > 3:
+                mplier = 1.3
+            csr_data[mi] = +1 * mplier
             csr_row_ind[mi] = mi
             csr_col_ind[mi] = pids[0]
 
-            csr_data[mi+m] = -1
+            csr_data[mi+m] = -1 * mplier
             csr_row_ind[mi+m] = mi
             csr_col_ind[mi+m] = pids[1]
 
@@ -112,6 +118,8 @@ class Evaluator:
     
 evor = Evaluator(data)
 evor.train()
-print 1./evor.predict('Federer R.', 'Grosjean S.')
+prd = evor.M * evor.R - evor.D
+print scipy.std(prd)
 
-evor.loov()
+# print 1./evor.predict('Federer R.', 'Grosjean S.')
+
