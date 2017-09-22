@@ -31,6 +31,10 @@ class Evaluator:
 
     def __init__(self, data):
         self.data = data
+
+    def pa(self, pname):
+        pid = self.pname_to_pid[pname]
+        return evor.R[[pid + sind*self.p for sind in xrange(len(SURFACES))]]
     
     def calc_M_D(self):
         pname_to_pid = {}
@@ -48,10 +52,15 @@ class Evaluator:
                     pid_to_pname[pid] = name
                     pid += 1
             match_to_pids[di] = [pname_to_pid[p1], pname_to_pid[p2]]
+            pid_to_matches[pname_to_pid[p1]].append(di)
+            pid_to_matches[pname_to_pid[p2]].append(di)
             match_to_pw[di] = 1./d[4]
 
         m = len(self.data)
         p = len(pname_to_pid)
+
+        self.m = m
+        self.p = p
 
 # model: M x R = D
 # where M is matches (m x p) (sparse)
@@ -65,6 +74,8 @@ class Evaluator:
             rm = 1
             if float(data[mi][6]) > 3:
                 rm = 1.3
+
+            mm = [ len(pid_to_matches[pid]) for pid in pids ]
             
             sind = get_sind(data[mi][1])
 
@@ -73,13 +84,13 @@ class Evaluator:
                 if sindc == sind:
                     sm = 1.
                 else:
-                    sm = .5
+                    sm = 0.
 
-                csr_data[mi + sindc*m] = +1 * rm * sm
+                csr_data[mi + sindc*m] = +1 * rm * sm / mm[0]
                 csr_row_ind[mi + sindc*m] = mi
                 csr_col_ind[mi + sindc*m] = pids[0] + sindc*p
 
-                csr_data[mi + sindc*m + 4*m] = -1 * rm * sm
+                csr_data[mi + sindc*m + 4*m] = -1 * rm * sm / mm[1]
                 csr_row_ind[mi + sindc*m + 4*m] = mi
                 csr_col_ind[mi + sindc*m + 4*m] = pids[1] + sindc*p
 
